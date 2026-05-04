@@ -1,0 +1,185 @@
+! ==================================================
+
+! YOUTUBE SHORTS — HARDENED
+
+! Last revised: 2026-05
+
+! Tested: uBlock Origin 1.57+, AdGuard 4.x
+
+! ==================================================
+
+
+
+! ---- Network-level block (fires before page loads) ----
+
+! Blocks direct URL navigation AND client-side SPA transitions
+
+||youtube.com/shorts$document,xmlhttprequest,important
+
+||youtube.com/shorts/*$document,xmlhttprequest,important
+
+
+
+! ---- Cosmetic: any renderer linking to /shorts/ ----
+
+! Single rule covers home, search, subscriptions, channel pages
+
+! Cheaper than per-surface rules — renderer type is irrelevant if the href matches
+
+youtube.com##ytd-rich-item-renderer:has(a[href^="/shorts/"])
+
+youtube.com##ytd-grid-video-renderer:has(a[href^="/shorts/"])
+
+youtube.com##ytd-video-renderer:has(a[href^="/shorts/"])
+
+youtube.com##ytd-compact-video-renderer:has(a[href^="/shorts/"])
+
+youtube.com##ytd-shelf-renderer:has(a[href^="/shorts/"])
+
+
+
+! ---- Overlay attribute (catches cases where href isn't a /shorts/ path) ----
+
+! e.g. some A/B surfaces route through /watch?v=...&feature=shorts
+
+youtube.com##[overlay-style="SHORTS"]
+
+
+
+! ---- Shorts-specific components YouTube renders ----
+
+! These are element names, not classes — stable across UI updates
+
+youtube.com##ytd-reel-shelf-renderer
+
+youtube.com##ytd-reel-video-renderer
+
+youtube.com##ytd-shorts-lockup-view-model
+
+youtube.com##yt-shorts-player-view-model
+
+
+
+! ---- Navigation and surface entry points ----
+
+! Guide sidebar (full and mini)
+
+youtube.com##ytd-guide-entry-renderer:has(#endpoint[title="Shorts"])
+
+youtube.com##ytd-mini-guide-entry-renderer:has(#endpoint[title="Shorts"])
+
+! Tab bar on channel pages and search (targets by shape, not text — locale-safe)
+
+youtube.com##tp-yt-paper-tab:has(yt-tab-shape:has-text(/Shorts/i))
+
+! Filter chip in search results
+
+youtube.com##yt-chip-cloud-chip-renderer:has-text(/Shorts/i)
+
+
+
+! ---- Shelves on homepage ----
+
+youtube.com##ytd-rich-section-renderer:has(ytd-reel-shelf-renderer)
+
+youtube.com##ytd-rich-section-renderer:has([is-shorts])
+
+
+
+! ---- Watch page: prevent Shorts player loading via SPA navigation ----
+
+! Hides the Shorts UI shell if the network rule doesn't fire (SPA routing)
+
+youtube.com##ytd-shorts
+
+youtube.com##ytd-watch-flexy[is-shorts-mode]
+
+
+
+! ---- Grid layout cleanup ----
+
+youtube.com##ytd-rich-grid-row,#contents.ytd-rich-grid-row:style(display: contents !important)
+
+
+
+! ==================================================
+
+! INSTAGRAM REELS — HARDENED
+
+! Notes:
+
+!   — No class selectors (Meta redeploys CSS every 48-72hrs)
+
+!   — All text matching uses /i flag for locale tolerance
+
+!   — $xhr rules intercept the API calls that SPA feeds use
+
+! ==================================================
+
+
+
+! ---- Network-level block ----
+
+! $document covers hard navigation; $xhr covers SPA feed loads and embedded reels
+
+||instagram.com/reels/*$document,xmlhttprequest,important
+
+||instagram.com/reel/*$document,xmlhttprequest,important
+
+! Block the API endpoint that surfaces Reels in the feed payload
+
+||instagram.com/api/v1/clips/*$xmlhttprequest,important
+
+||instagram.com/graphql/query*clips*$xmlhttprequest,important
+
+
+
+! ---- Cosmetic: profile Reels tab ----
+
+www.instagram.com##a[href$="/reels/"]
+
+
+
+! ---- Cosmetic: nav bar Reels button (exact path match, locale-safe) ----
+
+www.instagram.com##a[href="/reels/"]
+
+
+
+! ---- Cosmetic: feed items that are Reels ----
+
+! Target the article (post container) by its child reel link
+
+! href*="/reel/" matches individual reel permalinks; href="/reels/" is the nav
+
+www.instagram.com##article:has(a[href*="/reel/"])
+
+
+
+! ---- Cosmetic: Reels tray / horizontal shelf in feed ----
+
+! Use role + child link rather than aria-label (aria-label is translated)
+
+www.instagram.com##div[role="list"]:has(a[href*="/reel/"])
+
+www.instagram.com##div[role="feed"]:has(> div > div > a[href*="/reel/"])
+
+
+
+! ---- Cosmetic: Explore grid Reels tiles ----
+
+www.instagram.com##div[role="presentation"]:has(a[href*="/reel/"])
+
+
+
+! ---- Cosmetic: Stories bar embedded Reels highlights ----
+
+! Highlights linking to reels appear as story-ring items
+
+www.instagram.com##li:has(a[href*="/reel/"])
+
+
+
+! ---- Cosmetic: Suggested Reels cards in DMs / notifications ----
+
+www.instagram.com##div[role="dialog"] div:has(a[href*="/reel/"])
